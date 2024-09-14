@@ -20,11 +20,48 @@
   <body>
     <canvas id="game-of-life-canvas"></canvas>
     <script>
+      class GameOfLife {
+        static running = false;
+        static self;
+        fps = 10;
+
+        run() {
+          if (GameOfLife.running) {
+            return;
+          }
+
+          GameOfLife.running = true;
+          const cellPatternFactory = new CellPatternFactory();
+          const lifeBoard = new LifeBoard(cellPatternFactory.chaos(10, 10));
+          const renderer = new CanvasRenderer(
+            '#game-of-life-canvas',
+            lifeBoard,
+            30
+          );
+
+          setInterval(() => {
+            renderer.draw();
+            lifeBoard.nextGeneration();
+          }, GameOfLife.fpsToMilliseconds(this.fps));
+        }
+
+        static fpsToMilliseconds(fps) {
+          return 1000 / fps;
+        }
+
+        static instance() {
+          if (!this.self) {
+            this.self = new GameOfLife();
+          }
+          return this.self;
+        }
+      }
+
       class CanvasRenderer {
-        constructor(game, cellSize) {
-          this.cellSize = cellSize;
+        constructor(id, game, cellSize) {
           this.game = game;
-          this.canvas = document.querySelector('#game-of-life-canvas');
+          this.cellSize = cellSize;
+          this.canvas = document.querySelector(id);
           this.context = this.canvas.getContext('2d');
           this.canvas.height = window.innerHeight * 0.9;
           this.canvas.width = window.innerWidth * 0.9;
@@ -302,33 +339,6 @@
 
         keys() {
           return this.cells.map((cell) => cell.key());
-        }
-      }
-
-      class GameOfLife {
-        static self;
-        fps = 10;
-
-        run() {
-          const cellPatternFactory = new CellPatternFactory();
-          const gameoflife = new LifeBoard(cellPatternFactory.chaos(10, 10));
-          const renderer = new CanvasRenderer(gameoflife, 30);
-
-          setInterval(() => {
-            renderer.draw();
-            gameoflife.nextGeneration();
-          }, GameOfLife.fpsToMilliseconds(this.fps));
-        }
-
-        static fpsToMilliseconds(fps) {
-          return 1000 / fps;
-        }
-
-        static instance() {
-          if (!this.self) {
-            this.self = new GameOfLife();
-          }
-          return this.self;
         }
       }
 
