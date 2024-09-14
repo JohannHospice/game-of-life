@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Game of Life</title>
+    <style>
+      body {
+        margin: 0;
+        padding: 0;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        background-color: #f4f4f4;
+      }
+      #game-of-life-canvas {
+        border: 1px solid black;
+      }
+    </style>
+  </head>
+  <body>
+    <canvas id="game-of-life-canvas"></canvas>
+    <script>
+      class CanvasRenderer {
+        constructor(game, cellSize) {
+          this.canvas = document.querySelector('#game-of-life-canvas');
+          this.context = this.canvas.getContext('2d');
+          this.cellSize = cellSize;
+          this.game = game;
+          this.canvas.height = window.innerHeight * 0.7;
+          this.canvas.width = window.innerWidth * 0.9;
+        }
+
+        draw() {
+          this.clear();
+          this.drawRows();
+          this.drawColumns();
+          this.drawGame();
+        }
+
+        clear() {
+          this.context.fillStyle = '#f4f4f4';
+          this.context.fillRect(0, 0, this.canvas.width, this.canvas.height);
+        }
+
+        drawRows() {
+          for (
+            let y = this.cellSize;
+            y < this.canvas.height;
+            y += this.cellSize
+          ) {
+            this.context.beginPath();
+            this.context.moveTo(0, y);
+            this.context.lineTo(this.canvas.width, y);
+            this.context.stroke();
+          }
+        }
+
+        drawColumns() {
+          this.context.strokeStyle = '#ccc';
+          for (
+            let x = this.cellSize;
+            x < this.canvas.width;
+            x += this.cellSize
+          ) {
+            this.context.beginPath();
+            this.context.moveTo(x, 0);
+            this.context.lineTo(x, this.canvas.height);
+            this.context.stroke();
+          }
+        }
+
+        drawGame() {
+          this.context.fillStyle = '#000';
+          this.game.livingCells.forEach((cell) => {
+            const [x, y] = Cell.keyToCoordinate(cell);
+            this.context.fillRect(
+              x * this.cellSize,
+              y * this.cellSize,
+              this.cellSize,
+              this.cellSize
+            );
+          });
+        }
+      }
+
+      class LifeBoard {
+        constructor(livingCell) {
+          this.livingCells = new Set(livingCell);
+        }
+
+        neighbors(x, y) {
+          return [
+            new Cell(x - 1, y + 1),
+            new Cell(x, y + 1),
+            new Cell(x + 1, y + 1),
+            new Cell(x + 1, y),
+            new Cell(x + 1, y - 1),
+            new Cell(x, y - 1),
+            new Cell(x - 1, y - 1),
+            new Cell(x - 1, y),
+          ];
+        }
+
+        nextGeneration() {
+          const livingNeighbors = new Map();
+
+          this.livingCells.forEach((key) => {
+            const [x, y] = Cell.keyToCoordinate(key);
+
+            this.neighbors(x, y).forEach((neighbor) => {
+              const neighborKey = neighbor.key();
+              livingNeighbors.set(
+                neighborKey,
+                (livingNeighbors.get(neighborKey) || 0) + 1
+              );
+            });
+          });
+
+          const newLivingNeighbors = new Set();
+          livingNeighbors.forEach((count, key) => {
+            const isAlive = this.livingCells.has(key);
+            if (count === 3 || (isAlive && count == 2)) {
+              newLivingNeighbors.add(key);
+            }
+          });
+
+          this.livingCells = newLivingNeighbors;
+        }
+      }
+
+      class Cell {
+        static CELL_SEPARATOR = '_';
+
+        constructor(x, y) {
+          this.x = x;
+          this.y = y;
+        }
+
+        key() {
+          return this.x + Cell.CELL_SEPARATOR + this.y;
+        }
+
+        static keyToCoordinate(key) {
+          return key.split(Cell.CELL_SEPARATOR).map(Number);
+        }
+      }
+
+      class PatternBuilder {
+        static chaos(offsetX, offsetY) {
+          return [
+            new Cell(1 + offsetX, 0 + offsetY).key(),
+            new Cell(0 + offsetX, 1 + offsetY).key(),
+            new Cell(1 + offsetX, 1 + offsetY).key(),
+            new Cell(1 + offsetX, 2 + offsetY).key(),
+            new Cell(2 + offsetX, 2 + offsetY).key(),
+          ];
+        }
+      }
+
+      class GameOfLife {
+        TIMEOUT = 1000 / 30;
+
+        main() {
+          const gameoflife = new LifeBoard(PatternBuilder.chaos(60, 50));
+          const renderer = new CanvasRenderer(gameoflife, 10);
+
+          setInterval(() => {
+            renderer.draw();
+            gameoflife.nextGeneration();
+          }, this.TIMEOUT);
+        }
+
+        static instance() {
+          if (!this.self) {
+            this.self = new GameOfLife();
+          }
+          return this.self;
+        }
+      }
+
+      GameOfLife.instance().main();
+    </script>
+  </body>
+</html>
