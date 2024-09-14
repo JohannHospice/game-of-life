@@ -22,10 +22,10 @@
     <script>
       class CanvasRenderer {
         constructor(game, cellSize) {
-          this.canvas = document.querySelector('#game-of-life-canvas');
-          this.context = this.canvas.getContext('2d');
           this.cellSize = cellSize;
           this.game = game;
+          this.canvas = document.querySelector('#game-of-life-canvas');
+          this.context = this.canvas.getContext('2d');
           this.canvas.height = window.innerHeight * 0.9;
           this.canvas.width = window.innerWidth * 0.9;
         }
@@ -153,6 +153,121 @@
             .addCell(1, 1)
             .addCell(1, 2)
             .addCell(2, 2)
+            .reverse()
+            .inverse()
+            .moveTo(offsetX, offsetY)
+            .keys();
+        }
+
+        glider(offsetX, offsetY) {
+          return new CellPatternBuilder()
+            .addCell(0, 1)
+            .addCell(1, 2)
+            .addCell(2, 0)
+            .addCell(2, 1)
+            .addCell(2, 2)
+            .moveTo(offsetX, offsetY)
+            .keys();
+        }
+
+        blinker(offsetX, offsetY) {
+          return new CellPatternBuilder()
+            .addCell(0, 1)
+            .addCell(1, 1)
+            .addCell(2, 1)
+            .moveTo(offsetX, offsetY)
+            .keys();
+        }
+
+        beacon(offsetX, offsetY) {
+          return new CellPatternBuilder()
+            .addCell(0, 0)
+            .addCell(0, 1)
+            .addCell(1, 0)
+            .addCell(2, 3)
+            .addCell(3, 2)
+            .addCell(3, 3)
+            .moveTo(offsetX, offsetY)
+            .keys();
+        }
+
+        toad(offsetX, offsetY) {
+          return new CellPatternBuilder()
+            .addCell(1, 1)
+            .addCell(2, 1)
+            .addCell(3, 1)
+            .addCell(0, 2)
+            .addCell(1, 2)
+            .addCell(2, 2)
+            .moveTo(offsetX, offsetY)
+            .keys();
+        }
+
+        warship(offsetX, offsetY) {
+          return new CellPatternBuilder()
+            .addCell(1, 1)
+            .addCell(2, 1)
+            .addCell(3, 1)
+            .addCell(4, 1)
+            .addCell(5, 1)
+            .addCell(0, 2)
+            .addCell(5, 2)
+            .addCell(5, 3)
+            .addCell(4, 4)
+            .moveTo(offsetX, offsetY)
+            .keys();
+        }
+
+        pulsar(offsetX, offsetY) {
+          return new CellPatternBuilder()
+            .addCell(2, 0)
+            .addCell(3, 0)
+            .addCell(4, 0)
+            .addCell(8, 0)
+            .addCell(9, 0)
+            .addCell(10, 0)
+            .addCell(0, 2)
+            .addCell(5, 2)
+            .addCell(7, 2)
+            .addCell(12, 2)
+            .addCell(0, 3)
+            .addCell(5, 3)
+            .addCell(7, 3)
+            .addCell(12, 3)
+            .addCell(0, 4)
+            .addCell(5, 4)
+            .addCell(7, 4)
+            .addCell(12, 4)
+            .addCell(2, 5)
+            .addCell(3, 5)
+            .addCell(4, 5)
+            .addCell(8, 5)
+            .addCell(9, 5)
+            .addCell(10, 5)
+            .addCell(2, 7)
+            .addCell(3, 7)
+            .addCell(4, 7)
+            .addCell(8, 7)
+            .addCell(9, 7)
+            .addCell(10, 7)
+            .addCell(0, 8)
+            .addCell(5, 8)
+            .addCell(7, 8)
+            .addCell(12, 8)
+            .addCell(0, 9)
+            .addCell(5, 9)
+            .addCell(7, 9)
+            .addCell(12, 9)
+            .addCell(0, 10)
+            .addCell(5, 10)
+            .addCell(7, 10)
+            .addCell(12, 10)
+            .addCell(2, 12)
+            .addCell(3, 12)
+            .addCell(4, 12)
+            .addCell(8, 12)
+            .addCell(9, 12)
+            .addCell(10, 12)
             .moveTo(offsetX, offsetY)
             .keys();
         }
@@ -175,6 +290,16 @@
           return this;
         }
 
+        reverse() {
+          this.cells = this.cells.map((cell) => new Cell(cell.y, cell.x));
+          return this;
+        }
+
+        inverse() {
+          this.cells = this.cells.map((cell) => new Cell(cell.x, -cell.y));
+          return this;
+        }
+
         keys() {
           return this.cells.map((cell) => cell.key());
         }
@@ -182,12 +307,12 @@
 
       class GameOfLife {
         static self;
-        fps = 30;
+        fps = 10;
 
         run() {
           const cellPatternFactory = new CellPatternFactory();
-          const gameoflife = new LifeBoard(cellPatternFactory.chaos(60, 50));
-          const renderer = new CanvasRenderer(gameoflife, 10);
+          const gameoflife = new LifeBoard(cellPatternFactory.chaos(10, 10));
+          const renderer = new CanvasRenderer(gameoflife, 30);
 
           setInterval(() => {
             renderer.draw();
