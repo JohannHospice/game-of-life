@@ -26,7 +26,7 @@
           this.context = this.canvas.getContext('2d');
           this.cellSize = cellSize;
           this.game = game;
-          this.canvas.height = window.innerHeight * 0.7;
+          this.canvas.height = window.innerHeight * 0.9;
           this.canvas.width = window.innerWidth * 0.9;
         }
 
@@ -145,29 +145,58 @@
         }
       }
 
-      class PatternBuilder {
-        static chaos(offsetX, offsetY) {
-          return [
-            new Cell(1 + offsetX, 0 + offsetY).key(),
-            new Cell(0 + offsetX, 1 + offsetY).key(),
-            new Cell(1 + offsetX, 1 + offsetY).key(),
-            new Cell(1 + offsetX, 2 + offsetY).key(),
-            new Cell(2 + offsetX, 2 + offsetY).key(),
-          ];
+      class CellPatternFactory {
+        chaos(offsetX, offsetY) {
+          return new CellPatternBuilder()
+            .addCell(1, 0)
+            .addCell(0, 1)
+            .addCell(1, 1)
+            .addCell(1, 2)
+            .addCell(2, 2)
+            .moveTo(offsetX, offsetY)
+            .keys();
+        }
+      }
+
+      class CellPatternBuilder {
+        constructor() {
+          this.cells = [];
+        }
+
+        addCell(x, y) {
+          this.cells.push(new Cell(x, y));
+          return this;
+        }
+
+        moveTo(offsetX, offsetY) {
+          this.cells = this.cells.map(
+            (cell) => new Cell(cell.x + offsetX, cell.y + offsetY)
+          );
+          return this;
+        }
+
+        keys() {
+          return this.cells.map((cell) => cell.key());
         }
       }
 
       class GameOfLife {
-        TIMEOUT = 1000 / 30;
+        static self;
+        fps = 30;
 
-        main() {
-          const gameoflife = new LifeBoard(PatternBuilder.chaos(60, 50));
+        run() {
+          const cellPatternFactory = new CellPatternFactory();
+          const gameoflife = new LifeBoard(cellPatternFactory.chaos(60, 50));
           const renderer = new CanvasRenderer(gameoflife, 10);
 
           setInterval(() => {
             renderer.draw();
             gameoflife.nextGeneration();
-          }, this.TIMEOUT);
+          }, GameOfLife.fpsToMilliseconds(this.fps));
+        }
+
+        static fpsToMilliseconds(fps) {
+          return 1000 / fps;
         }
 
         static instance() {
@@ -178,7 +207,7 @@
         }
       }
 
-      GameOfLife.instance().main();
+      GameOfLife.instance().run();
     </script>
   </body>
 </html>
