@@ -24,24 +24,27 @@
         static running = false;
         static self;
         fps = 10;
+        cellSize = 10;
+
+        constructor() {
+          const cellPatternFactory = new CellPatternFactory();
+          this.lifeBoard = new LifeBoard(cellPatternFactory.chaos(10, 10));
+          this.renderer = new CanvasRenderer(
+            '#game-of-life-canvas',
+            this.lifeBoard,
+            this.cellSize
+          );
+        }
 
         run() {
           if (GameOfLife.running) {
             return;
           }
-
           GameOfLife.running = true;
-          const cellPatternFactory = new CellPatternFactory();
-          const lifeBoard = new LifeBoard(cellPatternFactory.chaos(10, 10));
-          const renderer = new CanvasRenderer(
-            '#game-of-life-canvas',
-            lifeBoard,
-            30
-          );
 
           setInterval(() => {
-            renderer.draw();
-            lifeBoard.nextGeneration();
+            this.renderer.draw();
+            this.lifeBoard.nextGeneration();
           }, GameOfLife.fpsToMilliseconds(this.fps));
         }
 
@@ -125,43 +128,29 @@
           this.livingCells = new Set(livingCell);
         }
 
-        neighbors(x, y) {
-          return [
-            new Cell(x - 1, y + 1),
-            new Cell(x, y + 1),
-            new Cell(x + 1, y + 1),
-            new Cell(x + 1, y),
-            new Cell(x + 1, y - 1),
-            new Cell(x, y - 1),
-            new Cell(x - 1, y - 1),
-            new Cell(x - 1, y),
-          ];
-        }
-
         nextGeneration() {
-          const livingNeighbors = new Map();
+          const countLivingNeighborsPerCell = new Map();
 
           this.livingCells.forEach((key) => {
             const [x, y] = Cell.keyToCoordinate(key);
 
-            this.neighbors(x, y).forEach((neighbor) => {
-              const neighborKey = neighbor.key();
-              livingNeighbors.set(
+            new CellPatternFactory().neighbors(x, y).forEach((neighborKey) => {
+              countLivingNeighborsPerCell.set(
                 neighborKey,
-                (livingNeighbors.get(neighborKey) || 0) + 1
+                (countLivingNeighborsPerCell.get(neighborKey) || 0) + 1
               );
             });
           });
 
-          const newLivingNeighbors = new Set();
-          livingNeighbors.forEach((count, key) => {
+          const newLivingCells = new Set();
+          countLivingNeighborsPerCell.forEach((count, key) => {
             const isAlive = this.livingCells.has(key);
             if (count === 3 || (isAlive && count == 2)) {
-              newLivingNeighbors.add(key);
+              newLivingCells.add(key);
             }
           });
 
-          this.livingCells = newLivingNeighbors;
+          this.livingCells = newLivingCells;
         }
       }
 
@@ -183,6 +172,20 @@
       }
 
       class CellPatternFactory {
+        neighbors(offsetX, offsetY) {
+          return new CellPatternBuilder()
+            .addCell(-1, 1)
+            .addCell(0, 1)
+            .addCell(1, 1)
+            .addCell(1, 0)
+            .addCell(1, -1)
+            .addCell(0, -1)
+            .addCell(-1, -1)
+            .addCell(-1, 0)
+            .moveTo(offsetX, offsetY)
+            .keys();
+        }
+
         chaos(offsetX, offsetY) {
           return new CellPatternBuilder()
             .addCell(1, 0)
