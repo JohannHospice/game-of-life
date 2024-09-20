@@ -25,7 +25,13 @@
 
         constructor() {
           const cellPatternFactory = new CellPatternFactory();
-          this.lifeBoard = new LifeBoard(cellPatternFactory.face(100, 60));
+
+          const centerX = Math.floor(window.innerWidth / 2 / this.cellSize);
+          const centerY = Math.floor(window.innerHeight / 2 / this.cellSize);
+
+          this.lifeBoard = new LifeBoard(
+            cellPatternFactory.face(centerX, centerY)
+          );
           this.renderer = new CanvasRenderer(
             '#game-of-life-canvas',
             this.lifeBoard,
