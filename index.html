@@ -18,12 +18,11 @@
     <canvas id="game-of-life-canvas"></canvas>
     <script>
       class GameOfLife {
-        static running = false;
-        static self;
+        running = true;
         fps = 15;
         cellSize = 10;
 
-        constructor() {
+        constructor(canvasId) {
           const cellPatternFactory = new CellPatternFactory();
 
           const centerX = Math.floor(window.innerWidth / 2 / this.cellSize);
@@ -33,20 +32,16 @@
             cellPatternFactory.face(centerX, centerY)
           );
           this.renderer = new CanvasRenderer(
-            '#game-of-life-canvas',
+            canvasId,
             this.lifeBoard,
             this.cellSize
           );
         }
 
         run() {
-          if (GameOfLife.running) {
-            return;
-          }
-          GameOfLife.running = true;
-
           const step = () => {
-            if (!GameOfLife.running) return;
+            if (!this.running) return;
+            this.running = true;
             this.renderer.draw();
             this.lifeBoard.nextGeneration();
             setTimeout(
@@ -59,17 +54,11 @@
         }
 
         stop() {
-          GameOfLife.running = false;
-        }
-        static fpsToMilliseconds(fps) {
-          return 1000 / fps;
+          this.running = false;
         }
 
-        static instance() {
-          if (!this.self) {
-            this.self = new GameOfLife();
-          }
-          return this.self;
+        static fpsToMilliseconds(fps) {
+          return 1000 / fps;
         }
       }
 
@@ -79,18 +68,23 @@
         cellColor = '#D07071';
 
         constructor(id, game, cellSize) {
-          this.game = game;
           this.cellSize = cellSize;
           this.canvas = document.querySelector(id);
           this.context = this.canvas.getContext('2d');
+          this.resizeCanvas();
+
+          window.addEventListener('resize', this.resizeCanvas.bind(this));
+          this.game = game;
+        }
+
+        resizeCanvas() {
           this.canvas.height = window.innerHeight;
           this.canvas.width = window.innerWidth;
         }
 
         draw() {
           this.clear();
-          this.drawRows();
-          this.drawColumns();
+          this.drawGrid();
           this.drawGame();
         }
 
@@ -99,7 +93,7 @@
           this.context.fillRect(0, 0, this.canvas.width, this.canvas.height);
         }
 
-        drawRows() {
+        drawGrid() {
           this.context.strokeStyle = this.strokeColor;
           for (
             let y = this.cellSize;
@@ -111,10 +105,6 @@
             this.context.lineTo(this.canvas.width, y);
             this.context.stroke();
           }
-        }
-
-        drawColumns() {
-          this.context.strokeStyle = this.strokeColor;
           for (
             let x = this.cellSize;
             x < this.canvas.width;
@@ -181,7 +171,7 @@
         }
 
         key() {
-          return this.x + Cell.CELL_SEPARATOR + this.y;
+          return `${this.x}${Cell.CELL_SEPARATOR}${this.y}`;
         }
 
         static keyToCoordinate(key) {
@@ -233,25 +223,10 @@
           return this;
         }
 
-        addPattern(pattern) {
-          this.cells = this.cells.concat(pattern);
-          return this;
-        }
-
         moveTo(offsetX, offsetY) {
           this.cells = this.cells.map(
             (cell) => new Cell(cell.x + offsetX, cell.y + offsetY)
           );
-          return this;
-        }
-
-        reverse() {
-          this.cells = this.cells.map((cell) => new Cell(cell.y, cell.x));
-          return this;
-        }
-
-        inverse() {
-          this.cells = this.cells.map((cell) => new Cell(cell.x, -cell.y));
           return this;
         }
 
@@ -260,7 +235,8 @@
         }
       }
 
-      GameOfLife.instance().run();
+      const instance = new GameOfLife('#game-of-life-canvas');
+      instance.run();
     </script>
   </body>
 </html>
