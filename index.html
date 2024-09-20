@@ -45,12 +45,22 @@
           }
           GameOfLife.running = true;
 
-          setInterval(() => {
+          const step = () => {
+            if (!GameOfLife.running) return;
             this.renderer.draw();
             this.lifeBoard.nextGeneration();
-          }, GameOfLife.fpsToMilliseconds(this.fps));
+            setTimeout(
+              () => requestAnimationFrame(step),
+              GameOfLife.fpsToMilliseconds(this.fps)
+            );
+          };
+
+          requestAnimationFrame(step);
         }
 
+        stop() {
+          GameOfLife.running = false;
+        }
         static fpsToMilliseconds(fps) {
           return 1000 / fps;
         }
